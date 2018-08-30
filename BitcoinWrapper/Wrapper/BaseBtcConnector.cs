@@ -6,29 +6,37 @@ using BitcoinWrapper.Wrapper.Interfaces;
 
 namespace BitcoinWrapper.Wrapper
 {
+    public struct BaseConnectorConfig
+    {
+        public bool isPrimary;
+        public string serverIp;
+        public string username;
+        public string password;
+    }
+
     /// <summary>
     /// This connector implements all the original methods in the Bitcoin-qt API
     /// See more here: https://en.bitcoin.it/wiki/Original_Bitcoin_client/API_Calls_list
     /// </summary>
-    public sealed class BaseBtcConnector : IBaseBtcConnector
+    public class BaseBtcConnector : IBaseBtcConnector
     {
-        private readonly IBaseConnector _baseConnector;
+        protected readonly IBaseConnector _baseConnector;
 
         /// <summary>
         /// Starts connecting to the Bitcoin-qt server
         /// </summary>
-        public BaseBtcConnector(bool isPrimary)
+		public BaseBtcConnector(BaseConnectorConfig config)
         {
-            if (isPrimary)
+            if (config.isPrimary)
             {
-                _baseConnector = new Primary();
+                _baseConnector = new Primary(config);
             }
             else
             {
-                _baseConnector = new Secondary();
+                _baseConnector = new Secondary(config);
             }
         }
-        
+
         public Decimal GetBalance()
         {
             String result = _baseConnector.RequestServer(MethodName.getbalance)["result"].ToString();
@@ -51,7 +59,7 @@ namespace BitcoinWrapper.Wrapper
         {
             return _baseConnector.RequestServer(MethodName.decoderawtransaction, rawTransaction)["result"].ToObject<Transaction>();
         }
-        
+
         public String GetAccount(String bitcoinAddress)
         {
             return _baseConnector.RequestServer(MethodName.getaccount, bitcoinAddress)["result"].ToString();
@@ -248,7 +256,7 @@ namespace BitcoinWrapper.Wrapper
         {
             return _baseConnector.RequestServer(MethodName.setgenerate, variable)["result"].ToString();
         }
-        
+
         /// <summary>
         /// not tested
         /// </summary>
@@ -318,7 +326,7 @@ namespace BitcoinWrapper.Wrapper
         /// <returns></returns>
         public String WalletPassphrase(String passphrase, Int32 timeout)
         {
-            return _baseConnector.RequestServer(MethodName.walletpassphrase, new List<object> { passphrase,timeout })["result"].ToString();
+            return _baseConnector.RequestServer(MethodName.walletpassphrase, new List<object> { passphrase, timeout })["result"].ToString();
         }
 
         public String WalletPassphraseChange(String oldPassphrase, String newPassphrase)
@@ -328,7 +336,7 @@ namespace BitcoinWrapper.Wrapper
 
         public String Move(String fromAccount, String toAccount, Decimal amount)
         {
-            return _baseConnector.RequestServer(MethodName.move, new List<object> { fromAccount , toAccount, amount })["result"].ToString();
+            return _baseConnector.RequestServer(MethodName.move, new List<object> { fromAccount, toAccount, amount })["result"].ToString();
         }
     }
 }

@@ -14,26 +14,30 @@ namespace BitcoinWrapper.Wrapper
 {
     public sealed class Secondary : IBaseConnector
     {
-        private readonly String _secondaryserverIp = ConfigurationManager.AppSettings.Get("SecondaryServerIp");
-        private readonly String _secondaryusername = ConfigurationManager.AppSettings.Get("SecondaryUsername");
-        private readonly String _secondarypassword = ConfigurationManager.AppSettings.Get("SecondaryPassword");
-        
-        public Secondary()
+        private readonly String _secondaryserverIp;
+        private readonly String _secondaryusername;
+        private readonly String _secondarypassword;
+
+        public Secondary(BaseConnectorConfig config)
         {
-            if (String.IsNullOrWhiteSpace(_secondaryserverIp))
+            if (String.IsNullOrEmpty(config.serverIp))
             {
                 throw new ArgumentException("You have to add a server IP setting with key: ServerIp");
             }
 
-            if (String.IsNullOrWhiteSpace(_secondaryusername))
+            if (String.IsNullOrEmpty(config.username))
             {
                 throw new ArgumentException("You have to add a bitcoin qt username setting with key: Username");
             }
 
-            if (String.IsNullOrWhiteSpace(_secondarypassword))
+            if (String.IsNullOrEmpty(config.password))
             {
                 throw new ArgumentException("You have to add a bitcoin qt password setting with key: Password");
             }
+
+            _secondaryserverIp = config.serverIp;
+            _secondaryusername = config.username;
+            _secondarypassword = config.password;
         }
 
         public JObject RequestServer(MethodName methodName)
@@ -71,7 +75,7 @@ namespace BitcoinWrapper.Wrapper
                 foreach (object parameter in parameters)
                 {
                     props.Add(parameter);
-                    
+
                 }
             }
 
@@ -87,7 +91,7 @@ namespace BitcoinWrapper.Wrapper
                 Stream dataStream = rawRequest.GetRequestStream();
                 dataStream.Write(byteArray, 0, byteArray.Length);
                 dataStream.Close();
-                
+
                 WebResponse webResponse = rawRequest.GetResponse();
                 streamReader = new StreamReader(webResponse.GetResponseStream(), true);
                 return (JObject)JsonConvert.DeserializeObject(streamReader.ReadToEnd());
@@ -96,7 +100,7 @@ namespace BitcoinWrapper.Wrapper
             {
                 if (webException.Status == WebExceptionStatus.ConnectFailure)
                 {
-                    throw new Exception("Could not connect to bitcoind, please check that bitcoind is up and running and that you configuration (" + _secondaryserverIp + ", " + _secondaryusername + ", " + _secondarypassword +") is correct");
+                    throw new Exception("Could not connect to bitcoind, please check that bitcoind is up and running and that you configuration (" + _secondaryserverIp + ", " + _secondaryusername + ", " + _secondarypassword + ") is correct");
                 }
                 return null;
             }
